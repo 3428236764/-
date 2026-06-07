@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电子科技协会管理系统</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a73e8;--primary-dark:#1557b0;--success:#0d904f;--warning:#e67e22;
+  --danger:#c0392b;--gold:#d4a017;--bg:#f0f2f5;--white:#fff;--border:#dcdcdc;
+  --text:#333;--text-secondary:#666;--sidebar-bg:#1e2a3a;--radius:6px;--shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:14px}
+th{background:#f8f9fa;font-weight:600;white-space:nowrap}
+tr:hover{background:#f0f7ff}
+button{cursor:pointer;border:none;border-radius:var(--radius);padding:8px 16px;font-size:14px;transition:all 0.2s}
+button:hover{opacity:0.85}
+input,select,textarea{border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;font-size:14px;font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,115,232,0.1)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-lg{padding:10px 24px;font-size:16px}
+.login-overlay{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1e2a3a 0%,#2c3e50 100%)}
+.login-box{background:var(--white);border-radius:12px;padding:40px;width:400px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+.login-box h1{text-align:center;margin-bottom:8px;font-size:24px;color:#1e2a3a}
+.login-box .subtitle{text-align:center;color:var(--text-secondary);margin-bottom:30px;font-size:14px}
+.login-box label{display:block;margin-bottom:4px;font-weight:600;font-size:14px}
+.login-box input{width:100%;margin-bottom:16px;padding:10px 12px}
+.login-box .error{color:var(--danger);text-align:center;margin-bottom:12px;font-size:13px;min-height:20px}
+.login-box button{width:100%;padding:12px}
+.login-box .offline-note{text-align:center;margin-top:12px;font-size:11px;color:#999}
+.app-layout{display:none;min-height:100vh}
+.app-layout.active{display:flex}
+.sidebar{width:220px;background:var(--sidebar-bg);color:#c8d6e5;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sidebar-logo{padding:20px 16px;font-size:17px;font-weight:700;color:#fff;border-bottom:1px solid rgba(255,255,255,0.1);text-align:center}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sidebar-nav a{display:flex;align-items:center;padding:12px 20px;color:#c8d6e5;font-size:14px;transition:all 0.2s;border-left:3px solid transparent;gap:10px;text-decoration:none}
+.sidebar-nav a:hover{background:var(--sidebar-bg);color:#fff}
+.sidebar-nav a.active{background:rgba(26,115,232,0.25);color:#fff;border-left-color:var(--primary)}
+.sidebar-nav .badge-count{background:var(--danger);color:#fff;font-size:11px;padding:1px 7px;border-radius:10px;margin-left:auto}
+.main-area{flex:1;margin-left:220px;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--topbar-bg);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(0,0,0,0.08);position:sticky;top:0;z-index:50}
+.topbar-left{font-size:16px;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.user-info{display:flex;align-items:center;gap:8px;font-size:14px}
+.user-role{font-size:11px;background:var(--primary);color:#fff;padding:2px 8px;border-radius:10px}
+.notify-btn{position:relative;background:none;border:none;font-size:20px;cursor:pointer;padding:4px;color:var(--text)}
+.notify-btn .red-dot{position:absolute;top:0;right:0;width:18px;height:18px;background:var(--danger);color:#fff;border-radius:50%;font-size:10px;display:none;align-items:center;justify-content:center}
+.notify-btn .red-dot.show{display:flex}
+.power-badge{background:linear-gradient(135deg,#d4a017,#f0c040);color:#5a3e00;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600}
+.notify-dropdown{position:absolute;top:48px;right:0;width:360px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);z-index:200;display:none;max-height:400px;overflow-y:auto}
+.notify-dropdown.show{display:block}
+.notify-dropdown .header{padding:12px 16px;font-weight:600;border-bottom:1px solid var(--border);font-size:14px}
+.notify-dropdown .item{padding:12px 16px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:13px}
+.notify-dropdown .item:hover{background:#f0f7ff}
+.notify-dropdown .item .type{font-weight:600;margin-bottom:2px}
+.notify-dropdown .empty{padding:24px;text-align:center;color:var(--text-secondary);font-size:13px}
+.content{padding:24px;flex:1}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-header h2{font-size:20px;font-weight:600}
+.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.toolbar input,.toolbar select{padding:6px 10px;font-size:13px}
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card-body{padding:0;overflow-x:auto}
+.tag{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:500}
+.tag-pending{background:#fff3cd;color:#856404}
+.tag-approved{background:#d4edda;color:#155724}
+.tag-rejected{background:#f8d7da;color:#721c24}
+.tag-changing{background:#ffeaa7;color:#6c5210}
+.tag-wait-org,.tag-wait-acad{background:#fff3cd;color:#856404}
+.tag-wait-president{background:#cce5ff;color:#004085}
+.tag-done{background:#d4edda;color:#155724}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--white);border-radius:12px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)}
+.modal.wide{max-width:720px}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:600}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-secondary)}
+.modal-body{padding:20px}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;margin-bottom:4px;font-weight:600;font-size:13px;color:var(--text-secondary)}
+.form-group input,.form-group select,.form-group textarea{width:100%}
+.form-group textarea{min-height:80px;resize:vertical}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+.help-text{font-size:11px;color:var(--text-secondary);margin-top:2px}
+.file-list{margin-top:6px;font-size:12px;color:var(--text-secondary)}
+.file-list span{display:inline-block;background:#e8f0fe;padding:2px 8px;border-radius:4px;margin:2px 4px 2px 0}
+.compare-box{border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin:8px 0;background:#fafafa}
+.compare-box .row{display:flex;gap:6px;font-size:13px;padding:4px 0}
+.compare-box .old{color:var(--danger);text-decoration:line-through}
+.compare-box .new{color:var(--success);font-weight:600}
+.compare-box .label{color:var(--text-secondary);min-width:60px}
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius);color:#fff;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:slideIn 0.3s ease;max-width:360px}
+.toast-success{background:var(--success)}.toast-error{background:var(--danger)}.toast-info{background:var(--primary)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-secondary)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail-grid .item label{display:block;font-size:12px;color:var(--text-secondary);margin-bottom:2px}
+.detail-grid .item .value{font-size:14px;font-weight:500}
+.detail-full{grid-column:1/-1}
+.photo-thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.photo-thumbs img{width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid var(--border)}
+.api-status{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.api-status.online{background:#0d904f}
+.api-status.offline{background:#c0392b}
+.loading{text-align:center;padding:20px;color:var(--text-secondary)}
+@media print{
+  .sidebar,.topbar,.page-header,.toolbar,button,.modal-overlay{display:none!important}
+  .main-area{margin-left:0!important}.content{padding:0!important}
+  .card{box-shadow:none!important;border:1px solid #ccc}
+}
+@media(max-width:768px){
+  .sidebar{width:180px}.main-area{margin-left:180px}
+  .content{padding:12px}.form-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h1>电子科技协会管理系统</h1>
+    <p class="subtitle">请使用分配的账号登录</p>
+    <label>用户名</label>
+    <input type="text" id="loginUser" placeholder="请输入用户名" autocomplete="off">
+    <label>密码</label>
+    <input type="password" id="loginPass" placeholder="请输入密码" onkeydown="if(event.key==='Enter')login()">
+    <p class="error" id="loginError"></p>
+    <button class="btn-primary btn-lg" onclick="login()">登 录</button>
+    <p class="offline-note" id="apiStatus"></p>
+  </div>
+</div>
+
+<!-- App Layout -->
+<div class="app-layout" id="appLayout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">电子科技协会管理系统</div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div class="topbar-left" id="pageTitle">首页</div>
+      <div class="topbar-right">
+        <span class="power-badge" id="powerBadge" style="display:none"></span>
+        <div style="position:relative">
+          <button class="notify-btn" onclick="toggleNotifyDropdown()" title="待办事项">🔔<span class="red-dot" id="notifyDot"></span></button>
+          <div class="notify-dropdown" id="notifyDropdown"></div>
+        </div>
+        <div class="user-info">
+          <span id="currentUserName"></span>
+          <span class="user-role" id="currentUserRole"></span>
+        </div>
+        <button class="btn-outline btn-sm" onclick="logout()">退出</button>
+      </div>
+    </header>
+    <div class="content" id="contentArea"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <span id="modalTitle">标题</span>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================================================
+// API CLIENT
+// ============================================================
+const API_BASE = '/api';
+let apiOnline = false;
+
+function getToken() { return sessionStorage.getItem('as_token'); }
+function setToken(t) { sessionStorage.setItem('as_token', t); }
+
+async function api(url, options = {}) {
+  const token = getToken();
+  const headers = { ...options.headers };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+  const res = await fetch(API_BASE + url, { ...options, headers });
+  if (res.status === 401) { logout(); throw new Error('登录已过期'); }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || '请求失败');
+  return data;
+}
+
+async function checkApi() {
+  try {
+    const res = await fetch(API_BASE + '/health');
+    apiOnline = res.ok;
+  } catch(e) { apiOnline = false; }
+  document.getElementById('apiStatus').innerHTML = apiOnline
+    ? '<span class="api-status online"></span> 后端服务已连接'
+    : '<span class="api-status offline"></span> 后端未连接，使用离线模式';
+}
+
+// ============================================================
+// DATA API WRAPPERS
+// ============================================================
+const MembersAPI = {
+  list: (q) => api('/members' + (q||'')),
+  get: (id) => api('/members/' + id),
+  create: (data) => api('/members', {method:'POST', body:JSON.stringify(data)}),
+  update: (id, data) => api('/members/' + id, {method:'PUT', body:JSON.stringify(data)}),
+  batch: (members) => api('/members/batch', {method:'POST', body:JSON.stringify({members})}),
+  delete: (id) => api('/members/' + id, {method:'DELETE'}),
+};
+
+const CadreAPI = {
+  list: (q) => api('/cadre-records' + (q||'')),
+  get: (id) => api('/cadre-records/' + id),
+  create: (data) => api('/cadre-records', {method:'POST', body:JSON.stringify(data)}),
+  update: (id, data) => api('/cadre-records/' + id, {method:'PUT', body:JSON.stringify(data)}),
+  delete: (id) => api('/cadre-records/' + id, {method:'DELETE'}),
+};
+
+const ResourceAPI = {
+  list: (q) => api('/resource-requests' + (q||'')),
+  get: (id) => api('/resource-requests/' + id),
+  create: (data) => api('/resource-requests', {method:'POST', body:JSON.stringify(data)}),
+  approveOrg: (id, data) => api('/resource-requests/' + id + '/approve-org', {method:'PUT', body:JSON.stringify(data)}),
+  approvePresident: (id, data) => api('/resource-requests/' + id + '/approve-president', {method:'PUT', body:JSON.stringify(data)}),
+};
+
+const ActivityAPI = {
+  list: (q) => api('/activities' + (q||'')),
+  get: (id) => api('/activities/' + id),
+  create: (data) => api('/activities', {method:'POST', body:JSON.stringify(data)}),
+  update: (id, data) => api('/activities/' + id, {method:'PUT', body:JSON.stringify(data)}),
+  delete: (id) => api('/activities/' + id, {method:'DELETE'}),
+};
+
+const ProjectAPI = {
+  list: (q) => api('/projects' + (q||'')),
+  get: (id) => api('/projects/' + id),
+  create: (data) => api('/projects', {method:'POST', body:JSON.stringify(data)}),
+  approveAcad: (id, data) => api('/projects/' + id + '/approve-acad', {method:'PUT', body:JSON.stringify(data)}),
+  approvePresident: (id, data) => api('/projects/' + id + '/approve-president', {method:'PUT', body:JSON.stringify(data)}),
+};
+
+const MaterialAPI = {
+  list: (q) => api('/materials' + (q||'')),
+  get: (id) => api('/materials/' + id),
+  create: (data) => api('/materials', {method:'POST', body:JSON.stringify(data)}),
+  update: (id, data) => api('/materials/' + id, {method:'PUT', body:JSON.stringify(data)}),
+  delete: (id) => api('/materials/' + id, {method:'DELETE'}),
+};
+
+const PendingAPI = {
+  taskCount: () => api('/pending-tasks/tasks'),
+  listChanges: () => api('/pending-changes/changes'),
+  getChange: (id) => api('/pending-changes/changes/' + id),
+  confirm: (id, data) => api('/pending-changes/changes/' + id + '/confirm', {method:'PUT', body:JSON.stringify(data)}),
+};
+
+const PresidentAPI = {
+  powerStatus: () => api('/president/power-status'),
+};
+
+// ============================================================
+// ROLE CONFIG
+// ============================================================
+const ROLE_MENUS = {
+  president: [
+    {id:'members',label:'成员资料',icon:'👥'},{id:'cadre',label:'干事档案',icon:'📋'},
+    {id:'resources',label:'人力物力申请',icon:'📦'},{id:'activities',label:'活动记录',icon:'🎯'},
+    {id:'projects',label:'项目申请',icon:'📝'},{id:'materials',label:'学术资料',icon:'📚'},
+    {id:'pending',label:'待办确认',icon:'⏳',badge:true},
+  ],
+  vice_admin: [
+    {id:'members',label:'成员资料',icon:'👥'},{id:'cadre',label:'干事档案',icon:'📋'},
+    {id:'pending',label:'待办确认',icon:'⏳',badge:true},
+  ],
+  vice_org: [
+    {id:'resources',label:'人力物力审批',icon:'📦'},{id:'activities',label:'活动记录',icon:'🎯'},
+    {id:'members',label:'成员资料(查看)',icon:'👥'},{id:'cadre',label:'干事档案(查看)',icon:'📋'},
+    {id:'pending',label:'待办确认',icon:'⏳',badge:true},
+  ],
+  vice_acad: [
+    {id:'projects',label:'项目审批',icon:'📝'},{id:'materials',label:'学术资料',icon:'📚'},
+    {id:'pending',label:'待办确认',icon:'⏳',badge:true},
+  ],
+  minister: [
+    {id:'resources',label:'我的申请',icon:'📦'},{id:'members',label:'成员资料(查看)',icon:'👥'},
+    {id:'cadre',label:'干事档案(查看)',icon:'📋'},{id:'activities',label:'活动记录(查看)',icon:'🎯'},
+  ],
+  academic_minister: [
+    {id:'projects',label:'我的项目',icon:'📝'},
+  ],
+};
+const ROLE_LABELS = {
+  president:'会长',vice_admin:'行政副会',vice_org:'组织副会',
+  vice_acad:'学术副会',minister:'普通部长',academic_minister:'学术部长'
+};
+
+function getDefaultPage() { const m = ROLE_MENUS[currentUser.role]; return m ? m[0].id : 'members'; }
+function canEdit(mod) {
+  const r=currentUser.role;
+  if(r==='president')return true;
+  if(mod==='members'||mod==='cadre')return r==='vice_admin';
+  if(mod==='resources')return r==='vice_org';
+  if(mod==='activities')return r==='vice_org';
+  if(mod==='projects')return r==='vice_acad';
+  if(mod==='materials')return r==='vice_acad';
+  return false;
+}
+function canConfirmPending() { return ['president','vice_admin','vice_org','vice_acad'].includes(currentUser.role); }
+
+// ============================================================
+// AUTH
+// ============================================================
+let currentUser = null;
+
+async function login() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value.trim();
+  const errEl = document.getElementById('loginError');
+  if (!username || !password) { errEl.textContent = '请输入用户名和密码'; return; }
+  errEl.textContent = '正在登录...';
+
+  try {
+    const data = await api('/login', { method:'POST', body: JSON.stringify({ username, password }) });
+    setToken(data.token);
+    currentUser = data.user;
+    sessionStorage.setItem('as_current_user', JSON.stringify(currentUser));
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('appLayout').classList.add('active');
+    renderSidebar();
+    updateTopbar();
+    navigateTo(getDefaultPage());
+  } catch(e) {
+    errEl.textContent = e.message || '账号或密码错误';
+  }
+}
+
+function logout() {
+  currentUser = null;
+  sessionStorage.removeItem('as_token');
+  sessionStorage.removeItem('as_current_user');
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appLayout').classList.remove('active');
+}
+
+function restoreSession() {
+  const saved = sessionStorage.getItem('as_current_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('appLayout').classList.add('active');
+    renderSidebar();
+    updateTopbar();
+    navigateTo(getDefaultPage());
+  }
+}
+
+// ============================================================
+// SIDEBAR & TOPBAR
+// ============================================================
+function renderSidebar() {
+  const nav = document.getElementById('sidebarNav');
+  const menu = ROLE_MENUS[currentUser.role] || [];
+  nav.innerHTML = menu.map(m => {
+    let badgeHtml = '';
+    if (m.badge) {
+      const c = notifyCountCache;
+      if (c > 0) badgeHtml = `<span class="badge-count">${c}</span>`;
+    }
+    return `<a href="#" data-page="${m.id}" onclick="navigateTo('${m.id}')"><span style="font-size:15px">${m.icon}</span> ${m.label} ${badgeHtml}</a>`;
+  }).join('');
+}
+
+function updateTopbar() {
+  document.getElementById('currentUserName').textContent = currentUser.realName;
+  document.getElementById('currentUserRole').textContent = ROLE_LABELS[currentUser.role];
+  updatePowerBadge();
+  refreshNotifyCount();
+}
+
+async function updatePowerBadge() {
+  const badge = document.getElementById('powerBadge');
+  if (currentUser.role !== 'president') { badge.style.display = 'none'; return; }
+  try {
+    const p = await PresidentAPI.powerStatus();
+    badge.style.display = 'inline';
+    badge.textContent = `独立同意：${p.remaining}次（至${p.periodEnd}）`;
+  } catch(e) { badge.style.display = 'none'; }
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+let notifyCountCache = 0;
+
+async function refreshNotifyCount() {
+  if (!canConfirmPending()) { notifyCountCache = 0; updateNotifyDot(); return; }
+  try {
+    const data = await PendingAPI.taskCount();
+    notifyCountCache = data.count;
+  } catch(e) { notifyCountCache = 0; }
+  updateNotifyDot();
+}
+
+function updateNotifyDot() {
+  const dot = document.getElementById('notifyDot');
+  if (notifyCountCache > 0) { dot.classList.add('show'); dot.textContent = notifyCountCache; }
+  else { dot.classList.remove('show'); }
+}
+
+async function toggleNotifyDropdown() {
+  const dd = document.getElementById('notifyDropdown');
+  if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
+  await buildNotifyList();
+  dd.classList.add('show');
+}
+
+async function buildNotifyList() {
+  const dd = document.getElementById('notifyDropdown');
+  const items = [];
+  const r = currentUser.role;
+
+  try {
+    if (['president','vice_admin','vice_org','vice_acad'].includes(r)) {
+      const changes = await PendingAPI.listChanges();
+      changes.forEach(c => items.push({
+        type:'待确认变更', desc:c.summary||(c.module+'-'+c.action),
+        time:c.created_at, page:'pending'
+      }));
+    }
+    if (r==='vice_org'||r==='president') {
+      let q=''; if(r==='vice_org')q='?status=待组织副会审'; else q='?status=待会长同意';
+      const reqs = await ResourceAPI.list(q);
+      reqs.forEach(rr => items.push({type:'待审批申请',desc:rr.item_name+' ('+rr.applicant_name+')',time:rr.created_at,page:'resources'}));
+    }
+    if (r==='vice_acad'||r==='president') {
+      let q=''; if(r==='vice_acad')q='?status=待学术副会审'; else if(r==='president')q='?status=待会长同意';
+      const projs = await ProjectAPI.list(q);
+      projs.forEach(p => items.push({type:'待审批项目',desc:p.project_name+' ('+p.leader+')',time:p.created_at,page:'projects'}));
+    }
+  } catch(e) {}
+
+  if (items.length === 0) {
+    dd.innerHTML = '<div class="header">待办事项</div><div class="empty">暂无待办事项</div>';
+  } else {
+    dd.innerHTML = `<div class="header">待办事项 (${items.length})</div>` +
+      items.map(it => `<div class="item" onclick="navigateTo('${it.page}');toggleNotifyDropdown()">
+        <div class="type">${it.type}</div><div>${it.desc}</div><div style="color:#999;font-size:11px">${it.time}</div>
+      </div>`).join('');
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('notifyDropdown');
+  if (!e.target.closest('.notify-btn') && dd.classList.contains('show')) dd.classList.remove('show');
+});
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigateTo(pageId) {
+  document.getElementById('pageTitle').textContent = ({
+    members:'成员资料管理',cadre:'干事档案管理',resources:'人力物力申请',
+    activities:'活动记录管理',projects:'项目申请管理',materials:'学术资料管理',pending:'待办确认'
+  })[pageId] || '电子科技协会管理系统';
+
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  const link = document.querySelector(`.sidebar-nav a[data-page="${pageId}"]`);
+  if (link) link.classList.add('active');
+
+  const content = document.getElementById('contentArea');
+  content.innerHTML = '<div class="loading">加载中...</div>';
+
+  switch(pageId) {
+    case 'members': renderMembersPage(content); break;
+    case 'cadre': renderCadrePage(content); break;
+    case 'resources': renderResourcesPage(content); break;
+    case 'activities': renderActivitiesPage(content); break;
+    case 'projects': renderProjectsPage(content); break;
+    case 'materials': renderMaterialsPage(content); break;
+    case 'pending': renderPendingPage(content); break;
+    default: content.innerHTML = '<p>页面未找到</p>';
+  }
+  updateTopbar();
+}
+
+// ============================================================
+// TOAST & MODAL
+// ============================================================
+function showToast(msg, type='info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`; t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function openModal(title, bodyHtml, footerHtml, wide) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalFooter').innerHTML = footerHtml || '';
+  const box = document.getElementById('modalBox');
+  if (wide) box.classList.add('wide'); else box.classList.remove('wide');
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+// ============================================================
+// UTILS
+// ============================================================
+function escapeHtml(s) { const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+function getStatusTag(status) {
+  const map = {
+    '待组织副会审':'<span class="tag tag-wait-org">待组织副会审</span>',
+    '待会长同意':'<span class="tag tag-wait-president">待会长同意</span>',
+    '已批准':'<span class="tag tag-approved">已批准</span>',
+    '已驳回':'<span class="tag tag-rejected">已驳回</span>',
+    '待学术副会审':'<span class="tag tag-wait-acad">待学术副会审</span>',
+    '已确认':'<span class="tag tag-approved">已确认</span>',
+    '待确认':'<span class="tag tag-pending">待确认</span>',
+    '变更中':'<span class="tag tag-changing">变更中</span>',
+  };
+  return map[status] || status;
+}
+
+function buildQuery(params) {
+  const p = new URLSearchParams();
+  for (const [k,v] of Object.entries(params)) { if (v) p.append(k, v); }
+  const s = p.toString(); return s ? '?'+s : '';
+}
+
+// ============================================================
+// MEMBERS PAGE
+// ============================================================
+let memberFilter = { search:'', role_tag:'' };
+
+async function renderMembersPage(container) {
+  try {
+    const members = await MembersAPI.list(buildQuery(memberFilter));
+    const canEditMembers = (currentUser.role === 'president' || currentUser.role === 'vice_admin');
+
+    let html = `<div class="page-header"><h2>成员列表</h2><div class="toolbar">
+      <input type="text" placeholder="搜索姓名/学号/电话" value="${escapeHtml(memberFilter.search)}" oninput="memberFilter.search=this.value;renderMembersPage(document.getElementById('contentArea'))">
+      <input type="text" placeholder="角色筛选" value="${escapeHtml(memberFilter.role_tag)}" style="width:100px" oninput="memberFilter.role_tag=this.value;renderMembersPage(document.getElementById('contentArea'))">
+      ${canEditMembers ? '<button class="btn-primary" onclick="showMemberForm()">+ 新增</button><button class="btn-outline" onclick="showBatchMemberForm()">批量登记</button><button class="btn-outline btn-sm" onclick="printView(\'members\')">🖨️ 打印</button>' : ''}
+    </div></div>`;
+
+    html += `<div class="card"><div class="card-body"><table><thead><tr><th>姓名</th><th>学号</th><th>联系方式</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody>`;
+
+    if (members.length === 0) {
+      html += `<tr><td colspan="6"><div class="empty-state"><p>暂无成员数据</p></div></td></tr>`;
+    } else {
+      members.forEach(m => {
+        const isChanging = m.isChanging;
+        html += `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.student_id)}</td><td>${escapeHtml(m.phone)}</td><td>${m.role_tag}</td>
+          <td>${isChanging?'<span class="tag tag-changing">变更中</span>':'<span class="tag tag-done">正常</span>'}</td>
+          <td><button class="btn-outline btn-sm" onclick="showMemberDetail('${m.id}')">详情</button>
+          ${canEditMembers?`<button class="btn-outline btn-sm" onclick="showMemberForm('${m.id}')">编辑</button><button class="btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);margin-left:6px" onclick="deleteItem('member','${m.id}','${escapeHtml(m.name)}')">删除</button>`:''}</td></tr>`;
+      });
+    }
+    html += `</tbody></table></div></div>`;
+    container.innerHTML = html;
+  } catch(e) { container.innerHTML = `<div class="empty-state"><p>加载失败: ${escapeHtml(e.message)}</p></div>`; }
+}
+
+function showMemberForm(id) {
+  // Fetch member detail if editing
+  const loadForm = async () => {
+    let m = null;
+    if (id) { try { m = await MembersAPI.get(id); } catch(e) {} }
+    const isEdit = !!m;
+    openModal(
+      isEdit?'编辑成员':'新增成员',
+      `<div class="form-group"><label>姓名</label><input id="mf_name" value="${isEdit?escapeHtml(m.name):''}"></div>
+       <div class="form-group"><label>学号</label><input id="mf_studentId" maxlength="11" pattern="\d{11}" title="请输入11位学号" value="${isEdit?escapeHtml(m.student_id):''}"></div>
+       <div class="form-group"><label>联系方式</label><input id="mf_phone" value="${isEdit?escapeHtml(m.phone):''}"></div>
+       <div class="form-group"><label>角色</label><input id="mf_roleTag" value="${isEdit?escapeHtml(m.role_tag||''):''}" placeholder="如：成员、干事、部长等"></div>`,
+      `<button class="btn-outline" onclick="closeModal()">取消</button>
+       <button class="btn-primary" onclick="saveMember('${id||''}')">保存</button>`
+    );
+  };
+  loadForm();
+}
+
+function showBatchMemberForm() {
+  openModal('批量登记成员',
+    `<div class="form-group"><label>批量输入（每行一个：姓名,学号,电话）</label>
+     <textarea id="batch_input" rows="8" placeholder="张三,20240010001,13800000001&#10;李四,20240010002,13900000002"></textarea></div>
+     <p class="help-text">每行一条记录，用英文逗号分隔</p>`,
+    `<button class="btn-outline" onclick="closeModal()">取消</button>
+     <button class="btn-primary" onclick="saveBatchMembers()">批量登记</button>`
+  );
+}
+
+async function saveMember(id) {
+  const name = document.getElementById('mf_name').value.trim();
+  const student_id = document.getElementById('mf_studentId').value.trim();
+  const phone = document.getElementById('mf_phone').value.trim();
+  const role_tag = document.getElementById('mf_roleTag').value;
+  if(!name||!student_id||!phone){showToast('请填写所有字段','error');return;}
+  if(!/^\d{11}$/.test(student_id)){showToast('学号必须为11位数字','error');return;}
+  try {
+    if(id) {
+      await MembersAPI.update(id, {name, student_id, phone, role_tag});
+      showToast('修改已提交，待确认后生效','info');
+    } else {
+      await MembersAPI.create({name, student_id, phone, role_tag});
+      showToast('新增已提交，待确认后生效','info');
+    }
+    closeModal();
+    renderMembersPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function saveBatchMembers() {
+  const text = document.getElementById('batch_input').value.trim();
+  if(!text){showToast('请输入数据','error');return;}
+  const lines = text.split('\n').filter(l=>l.trim());
+  const memberList = [];
+  for(const line of lines) {
+    const parts=line.split(',');
+    if(parts.length<3)continue;
+    if(!/^\d{11}$/.test(parts[1].trim())){showToast(`学号「${parts[1].trim()}」不是11位数字，请修正`,'error');return;}
+    memberList.push({name:parts[0].trim(),student_id:parts[1].trim(),phone:parts[2].trim(),role_tag:'成员'});
+  }
+  if(memberList.length===0){showToast('未识别到有效数据','error');return;}
+  try {
+    await MembersAPI.batch(memberList);
+    showToast(`${memberList.length} 条记录已提交，待确认后生效`,'success');
+    closeModal();
+    renderMembersPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function showMemberDetail(id) {
+  try {
+    const m = await MembersAPI.get(id);
+    openModal('成员详情',
+      `<div class="detail-grid">
+        <div class="item"><label>姓名</label><div class="value">${escapeHtml(m.name)}</div></div>
+        <div class="item"><label>学号</label><div class="value">${escapeHtml(m.student_id)}</div></div>
+        <div class="item"><label>联系方式</label><div class="value">${escapeHtml(m.phone)}</div></div>
+        <div class="item"><label>角色</label><div class="value">${m.role_tag}</div></div>
+      </div>`,
+      `<button class="btn-outline" onclick="closeModal()">关闭</button>`, true);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============================================================
+// CADRE PAGE
+// ============================================================
+let cadreFilter = { search:'' };
+
+async function renderCadrePage(container) {
+  try {
+    const records = await CadreAPI.list(buildQuery(cadreFilter));
+    const canEditCadre = (currentUser.role==='president'||currentUser.role==='vice_admin');
+
+    let html = `<div class="page-header"><h2>干事档案</h2><div class="toolbar">
+      <input type="text" placeholder="搜索姓名/活动/内容" value="${escapeHtml(cadreFilter.search)}" oninput="cadreFilter.search=this.value;renderCadrePage(document.getElementById('contentArea'))">
+      ${canEditCadre ? '<button class="btn-primary" onclick="showCadreForm()">+ 新增记录</button><button class="btn-outline btn-sm" onclick="printView(\'cadre\')">🖨️ 打印</button>' : ''}
+    </div></div>`;
+
+    html += `<div class="card"><div class="card-body"><table><thead><tr><th>姓名</th><th>时间</th><th>活动</th><th>工作内容</th><th>状态</th><th>操作</th></tr></thead><tbody>`;
+
+    if(records.length===0) {
+      html += `<tr><td colspan="6"><div class="empty-state"><p>暂无干事档案</p></div></td></tr>`;
+    } else {
+      records.forEach(r => {
+        html += `<tr><td>${escapeHtml(r.member_name||'-')}</td><td>${escapeHtml(r.activity_date)}</td><td>${escapeHtml(r.activity_name)}</td>
+          <td>${escapeHtml((r.description||'').substring(0,30))}${(r.description||'').length>30?'...':''}</td>
+          <td>${r.isChanging?'<span class="tag tag-changing">变更中</span>':'<span class="tag tag-done">正常</span>'}</td>
+          <td><button class="btn-outline btn-sm" onclick="showCadreDetail('${r.id}')">详情</button>
+          ${canEditCadre?`<button class="btn-outline btn-sm" onclick="showCadreForm('${r.id}')">编辑</button><button class="btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);margin-left:6px" onclick="deleteItem('cadre','${r.id}','${escapeHtml(r.member_name||'')}')">删除</button>`:''}</td></tr>`;
+      });
+    }
+    html += `</tbody></table></div></div>`;
+    container.innerHTML = html;
+  } catch(e) { container.innerHTML = `<div class="empty-state"><p>加载失败: ${escapeHtml(e.message)}</p></div>`; }
+}
+
+async function showCadreForm(id) {
+  // Get members for dropdown
+  let members = [];
+  try { members = await MembersAPI.list(); } catch(e) {}
+  const cadreMembers = members.filter(m => m.role_tag === '干事');
+  const memberOptions = cadreMembers.map(m => `<option value="${m.id}">${escapeHtml(m.name)} (${escapeHtml(m.student_id)})</option>`).join('');
+
+  let record = null;
+  if (id) { try { record = await CadreAPI.get(id); } catch(e) {} }
+  const isEdit = !!record;
+
+  openModal(isEdit?'编辑干事档案':'新增干事档案',
+    `<div class="form-group"><label>选择干事</label><select id="cf_memberId">${memberOptions}</select></div>
+     <div class="form-group"><label>时间</label><input type="date" id="cf_date" value="${isEdit?record.activity_date:''}"></div>
+     <div class="form-group"><label>活动名称</label><input id="cf_activity" value="${isEdit?escapeHtml(record.activity_name):''}"></div>
+     <div class="form-group"><label>工作内容描述</label><textarea id="cf_desc">${isEdit?escapeHtml(record.description):''}</textarea></div>`,
+    `<button class="btn-outline" onclick="closeModal()">取消</button>
+     <button class="btn-primary" onclick="saveCadre('${id||''}')">保存</button>`
+  );
+}
+
+async function saveCadre(id) {
+  const member_id = document.getElementById('cf_memberId').value;
+  const activity_date = document.getElementById('cf_date').value;
+  const activity_name = document.getElementById('cf_activity').value.trim();
+  const description = document.getElementById('cf_desc').value.trim();
+  if(!member_id||!activity_date||!activity_name||!description){showToast('请填写所有字段','error');return;}
+  try {
+    if(id) {
+      await CadreAPI.update(id, {member_id, activity_date, activity_name, description});
+      showToast('修改已提交，待确认后生效','info');
+    } else {
+      await CadreAPI.create({member_id, activity_date, activity_name, description});
+      showToast('新增已提交，待确认后生效','info');
+    }
+    closeModal();
+    renderCadrePage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function showCadreDetail(id) {
+  try {
+    const r = await CadreAPI.get(id);
+    openModal('干事档案详情',
+      `<div class="detail-grid">
+        <div class="item"><label>姓名</label><div class="value">${escapeHtml(r.member_name||'-')}</div></div>
+        <div class="item"><label>学号</label><div class="value">${escapeHtml(r.member_student_id||'-')}</div></div>
+        <div class="item"><label>时间</label><div class="value">${escapeHtml(r.activity_date)}</div></div>
+        <div class="item"><label>活动</label><div class="value">${escapeHtml(r.activity_name)}</div></div>
+        <div class="item detail-full"><label>工作内容</label><div class="value">${escapeHtml(r.description)}</div></div>
+      </div>`,
+      `<button class="btn-outline" onclick="closeModal()">关闭</button>`, true);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============================================================
+// RESOURCE REQUESTS PAGE
+// ============================================================
+let resourceFilter = { search:'', status:'' };
+
+async function renderResourcesPage(container) {
+  try {
+    const r = currentUser.role;
+    const requests = await ResourceAPI.list(buildQuery(resourceFilter));
+    const canSubmit = (r==='minister');
+
+    const statusOptions = (r==='vice_org')
+      ? ['全部','待组织副会审','待会长同意','已批准','已驳回']
+      : (r==='president'?['全部','待会长同意','待组织副会审','已批准','已驳回']:['全部','待组织副会审','待会长同意','已批准','已驳回']);
+
+    let html = `<div class="page-header"><h2>${r==='vice_org'?'人力物力审批':r==='president'?'人力物力审批':'我的申请'}</h2><div class="toolbar">
+      <input type="text" placeholder="搜索物品/用途/申请人" value="${escapeHtml(resourceFilter.search)}" oninput="resourceFilter.search=this.value;renderResourcesPage(document.getElementById('contentArea'))">
+      <select onchange="resourceFilter.status=(this.value==='全部'?'':this.value);renderResourcesPage(document.getElementById('contentArea'))">
+        ${statusOptions.map(s=>`<option value="${s}" ${resourceFilter.status===s||(s==='全部'&&!resourceFilter.status)?'selected':''}>${s}</option>`).join('')}
+      </select>
+      ${canSubmit?'<button class="btn-primary" onclick="showResourceForm()">+ 新建申请</button>':''}
+    </div></div>`;
+
+    html += `<div class="card"><div class="card-body"><table><thead><tr>${r!=='minister'?'<th>申请人</th>':''}<th>类型</th><th>物品/场地</th><th>数量</th><th>用途</th><th>状态</th><th>操作</th></tr></thead><tbody>`;
+
+    if(requests.length===0) {
+      html += `<tr><td colspan="${r!=='minister'?7:6}"><div class="empty-state"><p>暂无申请记录</p></div></td></tr>`;
+    } else {
+      requests.forEach(rr => {
+        html += `<tr>${r!=='minister'?`<td>${escapeHtml(rr.applicant_name)}</td>`:''}
+          <td>${rr.type}</td><td>${escapeHtml(rr.item_name)}</td><td>${rr.quantity}</td>
+          <td>${escapeHtml((rr.purpose||'').substring(0,20))}${(rr.purpose||'').length>20?'...':''}</td>
+          <td>${getStatusTag(rr.status)}</td>
+          <td><button class="btn-outline btn-sm" onclick="showResourceDetail('${rr.id}')">详情</button>
+          ${getResourceActionButtons(rr)}</td></tr>`;
+      });
+    }
+    html += `</tbody></table></div></div>`;
+    container.innerHTML = html;
+  } catch(e) { container.innerHTML = `<div class="empty-state"><p>加载失败: ${escapeHtml(e.message)}</p></div>`; }
+}
+
+function getResourceActionButtons(rr) {
+  const r = currentUser.role; let btns = '';
+  if (r==='vice_org' && rr.status==='待组织副会审') {
+    btns += `<button class="btn-success btn-sm" onclick="approveResource('${rr.id}','agree','org')">同意</button> `;
+    btns += `<button class="btn-danger btn-sm" onclick="rejectResource('${rr.id}')">驳回</button>`;
+  }
+  if (r==='president' && rr.status==='待会长同意') {
+    btns += `<button class="btn-success btn-sm" onclick="approveResource('${rr.id}','agree','president')">同意</button> `;
+    btns += `<button class="btn-gold btn-sm" onclick="approveResource('${rr.id}','power','president')">独立同意</button> `;
+    btns += `<button class="btn-danger btn-sm" onclick="rejectResource('${rr.id}')">驳回</button>`;
+  }
+  if (r==='president' && rr.status==='待组织副会审') {
+    btns += `<button class="btn-gold btn-sm" onclick="approveResource('${rr.id}','power','president')">独立同意</button>`;
+  }
+  return btns;
+}
+
+function showResourceForm() {
+  openModal('新建申请',
+    `<div class="form-group"><label>类型</label><select id="rf_type"><option value="物资">物资</option><option value="场地">场地</option></select></div>
+     <div class="form-group"><label>物品名称/场地名</label><input id="rf_item"></div>
+     <div class="form-group"><label>数量</label><input type="number" id="rf_qty" value="1" min="1"></div>
+     <div class="form-group"><label>用途说明</label><textarea id="rf_purpose"></textarea></div>
+     <div class="form-group"><label>使用时间</label><input type="date" id="rf_date"></div>
+     <div class="form-group"><label>附件</label><input type="file" id="rf_file" accept=".docx,.xlsx,.pdf" onchange="updateFileList(this,'rf_fileList')"><p class="help-text">支持 .docx .xlsx .pdf</p><div class="file-list" id="rf_fileList"></div></div>`,
+    `<button class="btn-outline" onclick="closeModal()">取消</button>
+     <button class="btn-primary" onclick="saveResource()">提交</button>`
+  );
+}
+
+async function saveResource() {
+  const type=document.getElementById('rf_type').value;
+  const item_name=document.getElementById('rf_item').value.trim();
+  const quantity=parseInt(document.getElementById('rf_qty').value)||0;
+  const purpose=document.getElementById('rf_purpose').value.trim();
+  const use_date=document.getElementById('rf_date').value;
+  if(!item_name||!quantity||!purpose||!use_date){showToast('请填写所有必填字段','error');return;}
+  const fileInput=document.getElementById('rf_file');
+  const attachments=[];
+  if(fileInput&&fileInput.files.length>0)for(const f of fileInput.files)attachments.push(f.name);
+  try {
+    await ResourceAPI.create({type,item_name,quantity,purpose,use_date,attachments});
+    closeModal();
+    renderResourcesPage(document.getElementById('contentArea'));
+    updateTopbar();
+    showToast('申请已提交','success');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function showResourceDetail(id) {
+  try {
+    const rr = await ResourceAPI.get(id);
+    openModal('申请详情',
+      `<div class="detail-grid">
+        <div class="item"><label>申请人</label><div class="value">${escapeHtml(rr.applicant_name)}</div></div>
+        <div class="item"><label>类型</label><div class="value">${rr.type}</div></div>
+        <div class="item"><label>物品/场地</label><div class="value">${escapeHtml(rr.item_name)}</div></div>
+        <div class="item"><label>数量</label><div class="value">${rr.quantity}</div></div>
+        <div class="item"><label>使用时间</label><div class="value">${escapeHtml(rr.use_date)}</div></div>
+        <div class="item"><label>状态</label><div class="value">${getStatusTag(rr.status)}</div></div>
+        <div class="item detail-full"><label>用途</label><div class="value">${escapeHtml(rr.purpose)}</div></div>
+        ${rr.org_vice_opinion?`<div class="item detail-full"><label>组织副会意见</label><div class="value">${escapeHtml(rr.org_vice_opinion)}</div></div>`:''}
+        ${rr.president_opinion?`<div class="item detail-full"><label>会长意见</label><div class="value">${escapeHtml(rr.president_opinion)}</div></div>`:''}
+      </div>`,
+      `<button class="btn-outline" onclick="closeModal()">关闭</button>`, true);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function approveResource(id, action, level) {
+  if(action==='power') {
+    if(!confirm('是否使用独立同意权直接批准？'))return;
+  }
+  try {
+    if(level==='org') {
+      if(action==='agree') await ResourceAPI.approveOrg(id, {action:'agree'});
+    } else if(level==='president') {
+      if(action==='power') await ResourceAPI.approvePresident(id, {action:'agree',use_power:true});
+      else await ResourceAPI.approvePresident(id, {action:'agree'});
+    }
+    showToast(action==='power'?'已使用独立同意权批准':'已同意','success');
+    renderResourcesPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function rejectResource(id) {
+  const reason = prompt('请输入驳回理由：');
+  if(reason===null)return;
+  if(!reason.trim()){showToast('驳回理由不能为空','error');return;}
+  try {
+    if(currentUser.role==='vice_org') await ResourceAPI.approveOrg(id, {action:'reject',comment:reason});
+    else await ResourceAPI.approvePresident(id, {action:'reject',comment:reason});
+    showToast('已驳回','info');
+    renderResourcesPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============================================================
+// ACTIVITIES PAGE
+// ============================================================
+let activityFilter = { search:'', year:'' };
+
+async function renderActivitiesPage(container) {
+  try {
+    const activities = await ActivityAPI.list(buildQuery(activityFilter));
+    const canEditAct = (currentUser.role==='president'||currentUser.role==='vice_org');
+
+    let html = `<div class="page-header"><h2>活动记录</h2><div class="toolbar">
+      <input type="text" placeholder="搜索名称/地点" value="${escapeHtml(activityFilter.search)}" oninput="activityFilter.search=this.value;renderActivitiesPage(document.getElementById('contentArea'))">
+      <input type="text" placeholder="年份" value="${escapeHtml(activityFilter.year)}" style="width:80px" oninput="activityFilter.year=this.value;renderActivitiesPage(document.getElementById('contentArea'))">
+      ${canEditAct?'<button class="btn-primary" onclick="showActivityForm()">+ 新增活动</button><button class="btn-outline btn-sm" onclick="printView(\'activities\')">🖨️ 打印</button>':''}
+    </div></div>`;
+
+    html += `<div class="card"><div class="card-body"><table><thead><tr><th>名称</th><th>日期</th><th>地点</th><th>二课分</th><th>参与人数</th><th>状态</th><th>操作</th></tr></thead><tbody>`;
+
+    if(activities.length===0) {
+      html += `<tr><td colspan="7"><div class="empty-state"><p>暂无活动记录</p></div></td></tr>`;
+    } else {
+      activities.forEach(a => {
+        const pids = a.participant_ids || [];
+        html += `<tr><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.date)}</td><td>${escapeHtml(a.location)}</td>
+          <td>${escapeHtml((a.second_class_desc||'').substring(0,20))}</td><td>${pids.length}人</td>
+          <td>${a.isChanging?'<span class="tag tag-changing">变更中</span>':'<span class="tag tag-done">正常</span>'}</td>
+          <td><button class="btn-outline btn-sm" onclick="showActivityDetail('${a.id}')">详情</button>
+          ${canEditAct?`<button class="btn-outline btn-sm" onclick="showActivityForm('${a.id}')">编辑</button><button class="btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);margin-left:6px" onclick="deleteItem('activity','${a.id}','${escapeHtml(a.name)}')">删除</button>`:''}</td></tr>`;
+      });
+    }
+    html += `</tbody></table></div></div>`;
+    container.innerHTML = html;
+  } catch(e) { container.innerHTML = `<div class="empty-state"><p>加载失败: ${escapeHtml(e.message)}</p></div>`; }
+}
+
+async function showActivityForm(id) {
+  let members = [];
+  try { members = await MembersAPI.list(); } catch(e) {}
+  const memberCheckboxes = members.map(m =>
+    `<label style="display:inline-block;margin-right:12px;font-size:13px;font-weight:400"><input type="checkbox" value="${m.id}" class="af_participant"> ${escapeHtml(m.name)}</label>`
+  ).join('');
+
+  let activity = null;
+  if (id) { try { activity = await ActivityAPI.get(id); } catch(e) {} }
+  const isEdit = !!activity;
+
+  openModal(isEdit?'编辑活动':'新增活动',
+    `<div class="form-group"><label>活动名称</label><input id="af_name" value="${isEdit?escapeHtml(activity.name):''}"></div>
+     <div class="form-row"><div class="form-group"><label>日期</label><input type="date" id="af_date" value="${isEdit?activity.date:''}"></div>
+     <div class="form-group"><label>地点</label><input id="af_location" value="${isEdit?escapeHtml(activity.location):''}"></div></div>
+     <div class="form-group"><label>策划案</label><textarea id="af_plan">${isEdit?escapeHtml(activity.plan_text||''):''}</textarea></div>
+     <div class="form-group"><label>二课分描述</label><input id="af_secondClass" value="${isEdit?escapeHtml(activity.second_class_desc||''):''}"></div>
+     <div class="form-group"><label>参与人员</label><div style="max-height:150px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:10px">${memberCheckboxes||'暂无成员'}</div></div>
+     <div class="form-group"><label>活动照片链接</label><div id="photoLinksContainer"></div><button class="btn-outline btn-sm" style="margin-top:4px" onclick="addPhotoLink()">+ 添加链接</button></div>`,
+    `<button class="btn-outline" onclick="closeModal()">取消</button>
+     <button class="btn-primary" onclick="saveActivity('${id||''}')">保存</button>`, true
+  );
+
+  if(isEdit && activity.participant_ids) {
+    setTimeout(() => {
+      document.querySelectorAll('.af_participant').forEach(cb => {
+        if(activity.participant_ids.includes(cb.value)) cb.checked = true;
+      });
+    }, 100);
+  }
+}
+
+function addPhotoLink() {
+  const c = document.getElementById('photoLinksContainer');
+  const d = document.createElement('div');
+  d.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+  d.innerHTML='<input class="photo-link-input" style="flex:1" placeholder="https://..."><button class="btn-outline btn-sm" onclick="this.parentElement.remove()">删除</button>';
+  c.appendChild(d);
+}
+
+async function saveActivity(id) {
+  const name=document.getElementById('af_name').value.trim();
+  const date=document.getElementById('af_date').value;
+  const location=document.getElementById('af_location').value.trim();
+  const plan_text=document.getElementById('af_plan').value.trim();
+  const second_class_desc=document.getElementById('af_secondClass').value.trim();
+  if(!name||!date||!location){showToast('请填写必填字段','error');return;}
+  const participant_ids=Array.from(document.querySelectorAll('.af_participant:checked')).map(cb=>cb.value);
+  const photo_links=Array.from(document.querySelectorAll('.photo-link-input')).map(inp=>inp.value.trim()).filter(v=>v);
+  try {
+    if(id) {
+      await ActivityAPI.update(id, {name,date,location,plan_text,second_class_desc,participant_ids,photo_links});
+      showToast('修改已提交，待确认后生效','info');
+    } else {
+      await ActivityAPI.create({name,date,location,plan_text,second_class_desc,participant_ids,photo_links});
+      showToast('新增已提交，待确认后生效','info');
+    }
+    closeModal();
+    renderActivitiesPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function showActivityDetail(id) {
+  try {
+    const a = await ActivityAPI.get(id);
+    let members = [];
+    try { members = await MembersAPI.list(); } catch(e) {}
+    const names = (a.participant_ids||[]).map(pid=>{const m=members.find(x=>x.id===pid);return m?m.name:pid;}).join('、');
+    openModal('活动详情',
+      `<div class="detail-grid">
+        <div class="item"><label>名称</label><div class="value">${escapeHtml(a.name)}</div></div>
+        <div class="item"><label>日期</label><div class="value">${escapeHtml(a.date)}</div></div>
+        <div class="item"><label>地点</label><div class="value">${escapeHtml(a.location)}</div></div>
+        <div class="item"><label>二课分</label><div class="value">${escapeHtml(a.second_class_desc||'')}</div></div>
+        <div class="item detail-full"><label>策划案</label><div class="value">${escapeHtml(a.plan_text||'')}</div></div>
+        <div class="item detail-full"><label>参与人员</label><div class="value">${escapeHtml(names||'无')}</div></div>
+      </div>`,
+      `<button class="btn-outline" onclick="closeModal()">关闭</button>`, true);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============================================================
+// PROJECTS PAGE
+// ============================================================
+let projectFilter = { search:'', status:'' };
+
+async function renderProjectsPage(container) {
+  try {
+    const r = currentUser.role;
+    const projects = await ProjectAPI.list(buildQuery(projectFilter));
+    const canSubmit = (r==='academic_minister');
+    const statusOptions = (r==='vice_acad')
+      ? ['全部','待学术副会审','待会长同意','已确认','已驳回']
+      : (r==='president'?['全部','待会长同意','待学术副会审','已确认','已驳回']:['全部','待学术副会审','待会长同意','已确认','已驳回']);
+
+    let html = `<div class="page-header"><h2>${r==='vice_acad'?'项目审批':r==='president'?'项目审批':'我的项目申请'}</h2><div class="toolbar">
+      <input type="text" placeholder="搜索项目/负责人" value="${escapeHtml(projectFilter.search)}" oninput="projectFilter.search=this.value;renderProjectsPage(document.getElementById('contentArea'))">
+      <select onchange="projectFilter.status=(this.value==='全部'?'':this.value);renderProjectsPage(document.getElementById('contentArea'))">
+        ${statusOptions.map(s=>`<option value="${s}" ${projectFilter.status===s||(s==='全部'&&!projectFilter.status)?'selected':''}>${s}</option>`).join('')}
+      </select>
+      ${canSubmit?'<button class="btn-primary" onclick="showProjectForm()">+ 新建项目</button>':''}
+    </div></div>`;
+
+    html += `<div class="card"><div class="card-body"><table><thead><tr>${r!=='academic_minister'?'<th>申请人</th>':''}<th>项目名</th><th>负责人</th><th>经费</th><th>时间</th><th>状态</th><th>操作</th></tr></thead><tbody>`;
+
+    if(projects.length===0) {
+      html += `<tr><td colspan="${r!=='academic_minister'?7:6}"><div class="empty-state"><p>暂无项目</p></div></td></tr>`;
+    } else {
+      projects.forEach(p => {
+        html += `<tr>${r!=='academic_minister'?`<td>${escapeHtml(p.applicant_name)}</td>`:''}
+          <td>${escapeHtml(p.project_name)}</td><td>${escapeHtml(p.leader)}</td><td>${escapeHtml(p.budget)}</td>
+          <td>${escapeHtml(p.start_date)}~${escapeHtml(p.end_date)}</td><td>${getStatusTag(p.status)}</td>
+          <td><button class="btn-outline btn-sm" onclick="showProjectDetail('${p.id}')">详情</button>${getProjectActionButtons(p)}</td></tr>`;
+      });
+    }
+    html += `</tbody></table></div></div>`;
+    container.innerHTML = html;
+  } catch(e) { container.innerHTML = `<div class="empty-state"><p>加载失败: ${escapeHtml(e.message)}</p></div>`; }
+}
+
+function getProjectActionButtons(p) {
+  const r=currentUser.role; let btns='';
+  if(r==='vice_acad'&&p.status==='待学术副会审') {
+    btns+=`<button class="btn-success btn-sm" onclick="approveProject('${p.id}','pass','acad')">通过并上报</button> `;
+    btns+=`<button class="btn-danger btn-sm" onclick="rejectProject('${p.id}')">驳回</button>`;
+  }
+  if(r==='president'&&p.status==='待会长同意') {
+    btns+=`<button class="btn-success btn-sm" onclick="approveProject('${p.id}','agree','president')">同意</button> `;
+    btns+=`<button class="btn-gold btn-sm" onclick="approveProject('${p.id}','power','president')">独立同意</button> `;
+    btns+=`<button class="btn-danger btn-sm" onclick="rejectProject('${p.id}')">退回</button>`;
+  }
+  if(r==='president'&&p.status==='待学术副会审') {
+    btns+=`<button class="btn-gold btn-sm" onclick="approveProject('${p.id}','power','president')">独立同意</button>`;
+  }
+  return btns;
+}
+
+async function showProjectForm() {
+  let members = [];
+  try { members = await MembersAPI.list(); } catch(e) {}
+  const memberCheckboxes = members.map(m =>
+    `<label style="display:inline-block;margin-right:12px;font-size:13px;font-weight:400"><input type="checkbox" value="${m.id}" class="pf_participant"> ${escapeHtml(m.name)}</label>`
+  ).join('');
+
+  openModal('项目申请表',
+    `<div class="form-group"><label>项目名称</label><input id="pf_name"></div>
+     <div class="form-group"><label>负责人</label><input id="pf_leader"></div>
+     <div class="form-group"><label>参与成员</label><div style="max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:10px">${memberCheckboxes||'暂无成员'}</div></div>
+     <div class="form-group"><label>项目简介</label><textarea id="pf_desc"></textarea></div>
+     <div class="form-group"><label>所需经费</label><input id="pf_budget"></div>
+     <div class="form-row"><div class="form-group"><label>起始时间</label><input type="date" id="pf_start"></div>
+     <div class="form-group"><label>结束时间</label><input type="date" id="pf_end"></div></div>
+     <div class="form-group"><label>附件</label><input type="file" id="pf_file" accept=".docx,.xlsx,.pdf"><p class="help-text">支持 .docx .xlsx .pdf</p></div>`,
+    `<button class="btn-outline" onclick="closeModal()">取消</button>
+     <button class="btn-primary" onclick="saveProject()">提交</button>`, true
+  );
+}
+
+async function saveProject() {
+  const project_name=document.getElementById('pf_name').value.trim();
+  const leader=document.getElementById('pf_leader').value.trim();
+  const description=document.getElementById('pf_desc').value.trim();
+  const budget=document.getElementById('pf_budget').value.trim();
+  const start_date=document.getElementById('pf_start').value;
+  const end_date=document.getElementById('pf_end').value;
+  if(!project_name||!leader||!description||!budget||!start_date||!end_date){showToast('请填写所有必填字段','error');return;}
+  const member_ids=Array.from(document.querySelectorAll('.pf_participant:checked')).map(cb=>cb.value);
+  try {
+    await ProjectAPI.create({project_name,leader,member_ids,description,budget,start_date,end_date});
+    closeModal();
+    renderProjectsPage(document.getElementById('contentArea'));
+    updateTopbar();
+    showToast('项目申请已提交','success');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function showProjectDetail(id) {
+  try {
+    const p = await ProjectAPI.get(id);
+    let members = [];
+    try { members = await MembersAPI.list(); } catch(e) {}
+    const names = (p.member_ids||[]).map(mid=>{const m=members.find(x=>x.id===mid);return m?m.name:mid;}).join('、');
+    openModal('项目详情',
+      `<div class="detail-grid">
+        <div class="item"><label>项目名称</label><div class="value">${escapeHtml(p.project_name)}</div></div>
+        <div class="item"><label>负责人</label><div class="value">${escapeHtml(p.leader)}</div></div>
+        <div class="item"><label>经费</label><div class="value">${escapeHtml(p.budget)}</div></div>
+        <div class="item"><label>时间</label><div class="value">${escapeHtml(p.start_date)} ~ ${escapeHtml(p.end_date)}</div></div>
+        <div class="item"><label>状态</label><div class="value">${getStatusTag(p.status)}</div></div>
+        <div class="item"><label>申请人</label><div class="value">${escapeHtml(p.applicant_name)}</div></div>
+        <div class="item detail-full"><label>简介</label><div class="value">${escapeHtml(p.description)}</div></div>
+        <div class="item detail-full"><label>参与成员</label><div class="value">${escapeHtml(names||'无')}</div></div>
+        ${p.acad_vice_opinion?`<div class="item detail-full"><label>学术副会意见</label><div class="value">${escapeHtml(p.acad_vice_opinion)}</div></div>`:''}
+        ${p.president_opinion?`<div class="item detail-full"><label>会长意见</label><div class="value">${escapeHtml(p.president_opinion)}</div></div>`:''}
+      </div>`,
+      `<button class="btn-outline" onclick="closeModal()">关闭</button>`, true);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function approveProject(id, action, level) {
+  if(action==='power') {
+    if(!confirm('是否使用独立同意权直接批准？'))return;
+  }
+  try {
+    if(level==='acad') {
+      await ProjectAPI.approveAcad(id, {action:'pass'});
+    } else if(level==='president') {
+      if(action==='power') await ProjectAPI.approvePresident(id, {action:'agree',use_power:true});
+      else await ProjectAPI.approvePresident(id, {action:'agree'});
+    }
+    showToast(action==='power'?'已使用独立同意权确认':'已确认','success');
+    renderProjectsPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function rejectProject(id) {
+  const reason = prompt('请输入驳回/退回理由：');
+  if(reason===null)return;
+  if(!reason.trim()){showToast('理由不能为空','error');return;}
+  try {
+    if(currentUser.role==='vice_acad') await ProjectAPI.approveAcad(id, {action:'reject',comment:reason});
+    else await ProjectAPI.approvePresident(id, {action:'reject',comment:reason});
+    showToast('已驳回','info');
+    renderProjectsPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============================================================
+// MATERIALS PAGE
+// ============================================================
+let materialFilter = { search:'', category:'' };
+
+async function renderMaterialsPage(container) {
+  try {
+    const materials = await MaterialAPI.list(buildQuery(materialFilter));
+    const canEditMat = (currentUser.role==='president'||currentUser.role==='vice_acad');
+
+    let html = `<div class="page-header"><h2>学术资料</h2><div class="toolbar">
+      <input type="text" placeholder="搜索标题/摘要" value="${escapeHtml(materialFilter.search)}" oninput="materialFilter.search=this.value;renderMaterialsPage(document.getElementById('contentArea'))">
+      <select onchange="materialFilter.category=this.value;renderMaterialsPage(document.getElementById('contentArea'))">
+        <option value="">全部分类</option><option value="论文" ${materialFilter.category==='论文'?'selected':''}>论文</option><option value="报告" ${materialFilter.category==='报告'?'selected':''}>报告</option><option value="课件" ${materialFilter.category==='课件'?'selected':''}>课件</option><option value="其他" ${materialFilter.category==='其他'?'selected':''}>其他</option>
+      </select>
+      ${canEditMat?'<button class="btn-primary" onclick="showMaterialForm()">+ 新增资料</button>':''}
+    </div></div>`;
+
+    html += `<div class="card"><div class="card-body"><table><thead><tr><th>标题</th><th>摘要</th><th>分类</th><th>附件</th><th>日期</th><th>状态</th><th>操作</th></tr></thead><tbody>`;
+
+    if(materials.length===0) {
+      html += `<tr><td colspan="7"><div class="empty-state"><p>暂无学术资料</p></div></td></tr>`;
+    } else {
+      materials.forEach(m => {
+        html += `<tr><td>${escapeHtml(m.title)}</td>
+          <td>${escapeHtml((m.summary||'').substring(0,30))}${(m.summary||'').length>30?'...':''}</td>
+          <td>${m.category||'-'}</td><td>${m.file_name||'无'}</td><td>${escapeHtml(m.created_at)}</td>
+          <td>${m.isChanging?'<span class="tag tag-changing">变更中</span>':'<span class="tag tag-done">正常</span>'}</td>
+          <td><button class="btn-outline btn-sm" onclick="showMaterialDetail('${m.id}')">详情</button>
+          ${canEditMat?`<button class="btn-outline btn-sm" onclick="showMaterialForm('${m.id}')">编辑</button><button class="btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);margin-left:6px" onclick="deleteItem('material','${m.id}','${escapeHtml(m.title)}')">删除</button>`:''}</td></tr>`;
+      });
+    }
+    html += `</tbody></table></div></div>`;
+    container.innerHTML = html;
+  } catch(e) { container.innerHTML = `<div class="empty-state"><p>加载失败: ${escapeHtml(e.message)}</p></div>`; }
+}
+
+async function showMaterialForm(id) {
+  let m = null;
+  if(id) { try { m = await MaterialAPI.get(id); } catch(e) {} }
+  const isEdit = !!m;
+  openModal(isEdit?'编辑学术资料':'新增学术资料',
+    `<div class="form-group"><label>标题</label><input id="mtf_title" value="${isEdit?escapeHtml(m.title):''}"></div>
+     <div class="form-group"><label>分类</label><select id="mtf_category">
+       <option value="论文" ${isEdit&&m.category==='论文'?'selected':''}>论文</option>
+       <option value="报告" ${isEdit&&m.category==='报告'?'selected':''}>报告</option>
+       <option value="课件" ${isEdit&&m.category==='课件'?'selected':''}>课件</option>
+       <option value="其他" ${isEdit&&m.category==='其他'?'selected':''}>其他</option>
+     </select></div>
+     <div class="form-group"><label>摘要</label><textarea id="mtf_summary">${isEdit?escapeHtml(m.summary||''):''}</textarea></div>
+     <div class="form-group"><label>附件链接或文件</label><input id="mtf_attachment" value="${isEdit?escapeHtml(m.file_name||''):''}"><p class="help-text">输入文件链接或通过下方上传</p></div>`,
+    `<button class="btn-outline" onclick="closeModal()">取消</button>
+     <button class="btn-primary" onclick="saveMaterial('${id||''}')">保存</button>`
+  );
+}
+
+async function saveMaterial(id) {
+  const title=document.getElementById('mtf_title').value.trim();
+  const category=document.getElementById('mtf_category').value;
+  const summary=document.getElementById('mtf_summary').value.trim();
+  const file_name=document.getElementById('mtf_attachment').value.trim();
+  if(!title){showToast('请填写标题','error');return;}
+  try {
+    if(id) {
+      await MaterialAPI.update(id, {title,category,summary,file_name});
+      showToast('修改已提交，待确认后生效','info');
+    } else {
+      await MaterialAPI.create({title,category,summary,file_name});
+      showToast('新增已提交，待确认后生效','info');
+    }
+    closeModal();
+    renderMaterialsPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function showMaterialDetail(id) {
+  try {
+    const m = await MaterialAPI.get(id);
+    openModal('学术资料详情',
+      `<div class="detail-grid">
+        <div class="item"><label>标题</label><div class="value">${escapeHtml(m.title)}</div></div>
+        <div class="item"><label>分类</label><div class="value">${m.category||'-'}</div></div>
+        <div class="item"><label>日期</label><div class="value">${escapeHtml(m.created_at)}</div></div>
+        <div class="item"><label>附件</label><div class="value">${m.file_name?escapeHtml(m.file_name)+' <a href="#" onclick="showToast(\'下载功能需后端文件支持\',\'info\')">📥</a>':'无'}</div></div>
+        <div class="item detail-full"><label>摘要</label><div class="value">${escapeHtml(m.summary||'')}</div></div>
+      </div>`,
+      `<button class="btn-outline" onclick="closeModal()">关闭</button>`, true);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============================================================
+// PENDING PAGE (DUAL-SIGN)
+// ============================================================
+async function renderPendingPage(container) {
+  try {
+    const changes = await PendingAPI.listChanges();
+    const r = currentUser.role;
+
+    let html = `<div class="page-header"><h2>待办确认</h2></div>`;
+
+    if(changes.length===0) {
+      html += `<div class="card"><div class="card-body"><div class="empty-state"><p>暂无待确认事项</p></div></div></div>`;
+    } else {
+      html += `<div class="card"><div class="card-body"><table><thead><tr><th>ID</th><th>模块</th><th>操作</th><th>变更摘要</th><th>发起人</th><th>时间</th><th>操作</th></tr></thead><tbody>`;
+      changes.forEach(c => {
+        html += `<tr><td>${(c.id||'').substring(0,6)}</td><td>${c.module}</td><td>${c.action}</td>
+          <td>${escapeHtml(c.summary||'')}</td><td>${escapeHtml(c.proposer_name)}</td><td>${c.created_at}</td>
+          <td><button class="btn-outline btn-sm" onclick="showChangeDetail('${c.id}')">查看对比</button>
+          <button class="btn-success btn-sm" onclick="confirmChange('${c.id}','confirm')">确认</button>
+          ${r==='president'?`<button class="btn-gold btn-sm" onclick="confirmChange('${c.id}','power')">独立同意</button>`:''}
+          <button class="btn-danger btn-sm" onclick="rejectChange('${c.id}')">驳回</button></td></tr>`;
+      });
+      html += `</tbody></table></div></div>`;
+    }
+    container.innerHTML = html;
+  } catch(e) { container.innerHTML = `<div class="empty-state"><p>加载失败: ${escapeHtml(e.message)}</p></div>`; }
+}
+
+async function showChangeDetail(id) {
+  try {
+    const c = await PendingAPI.getChange(id);
+    let compareHtml = '';
+    if(c.original_data && c.proposed_data) {
+      compareHtml = `<div class="compare-box"><strong>变更对比：</strong>`;
+      for(const key of Object.keys(c.proposed_data)) {
+        const oldVal = c.original_data[key] !== undefined ? JSON.stringify(c.original_data[key]) : '(无)';
+        const newVal = JSON.stringify(c.proposed_data[key]);
+        if(oldVal !== newVal) {
+          compareHtml += `<div class="row"><span class="label">${key}：</span><span class="old">${escapeHtml(oldVal)}</span> → <span class="new">${escapeHtml(newVal)}</span></div>`;
+        }
+      }
+      compareHtml += `</div>`;
+    } else if(c.proposed_data) {
+      compareHtml = `<div class="compare-box"><strong>新增数据：</strong>`;
+      if(Array.isArray(c.proposed_data)) {
+        compareHtml += `<p>共 ${c.proposed_data.length} 条记录</p>`;
+      } else {
+        for(const key of Object.keys(c.proposed_data)) {
+          compareHtml += `<div class="row"><span class="label">${key}：</span><span class="new">${escapeHtml(String(c.proposed_data[key]))}</span></div>`;
+        }
+      }
+      compareHtml += `</div>`;
+    }
+
+    openModal('变更详情',
+      `<p><strong>模块：</strong>${c.module} &nbsp; <strong>操作：</strong>${c.action}</p>
+       <p><strong>发起人：</strong>${escapeHtml(c.proposer_name)} &nbsp; <strong>时间：</strong>${c.created_at}</p>${compareHtml}`,
+      `<button class="btn-outline" onclick="closeModal()">关闭</button>`, true);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function confirmChange(id, action) {
+  if(action==='power') {
+    if(!confirm('是否使用独立同意权直接确认变更？'))return;
+  }
+  try {
+    await PendingAPI.confirm(id, {action:'confirm',use_power:action==='power'});
+    showToast(action==='power'?'已使用独立同意权确认':'变更已确认','success');
+    renderPendingPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function rejectChange(id) {
+  const reason = prompt('请输入驳回理由：');
+  if(reason===null)return;
+  if(!reason.trim()){showToast('驳回理由不能为空','error');return;}
+  try {
+    await PendingAPI.confirm(id, {action:'reject',reason:reason.trim()});
+    showToast('变更已驳回','info');
+    renderPendingPage(document.getElementById('contentArea'));
+    updateTopbar();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============================================================
+// FILE & PRINT UTILS
+// ============================================================
+function updateFileList(fileInput, listId) {
+  const list = document.getElementById(listId);
+  if(!list)return;
+  const files = fileInput.files;
+  let html = '';
+  for(let i=0;i<files.length;i++) {
+    const sizeMB=(files[i].size/1024/1024).toFixed(2);
+    const sizeWarn=files[i].size>2*1024*1024?' ⚠️ 超过2MB':'';
+    html+=`<span>${escapeHtml(files[i].name)} (${sizeMB}MB)${sizeWarn}</span>`;
+  }
+  list.innerHTML = html;
+}
+
+async function printView(type) {
+  const w = window.open('', '_blank');
+  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>打印视图</title>';
+  html += '<style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 10px;font-size:12px}th{background:#eee}h2{font-size:18px}</style></head><body>';
+  html += `<h2>${{members:'成员资料',cadre:'干事档案',activities:'活动记录'}[type]||''}</h2><table>`;
+
+  try {
+    if(type==='members') {
+      html += '<thead><tr><th>姓名</th><th>学号</th><th>联系方式</th><th>角色</th></tr></thead><tbody>';
+      const members = await MembersAPI.list();
+      members.forEach(m => { html += `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.student_id)}</td><td>${escapeHtml(m.phone)}</td><td>${m.role_tag}</td></tr>`; });
+    } else if(type==='cadre') {
+      html += '<thead><tr><th>姓名</th><th>时间</th><th>活动</th><th>工作内容</th></tr></thead><tbody>';
+      const records = await CadreAPI.list();
+      records.forEach(r => { html += `<tr><td>${escapeHtml(r.member_name||'-')}</td><td>${escapeHtml(r.activity_date)}</td><td>${escapeHtml(r.activity_name)}</td><td>${escapeHtml(r.description||'')}</td></tr>`; });
+    } else if(type==='activities') {
+      html += '<thead><tr><th>名称</th><th>日期</th><th>地点</th><th>二课分描述</th></tr></thead><tbody>';
+      const activities = await ActivityAPI.list();
+      activities.forEach(a => { html += `<tr><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.date)}</td><td>${escapeHtml(a.location)}</td><td>${escapeHtml(a.second_class_desc||'')}</td></tr>`; });
+    }
+  } catch(e) { html += `<tr><td colspan="4">加载失败</td></tr>`; }
+
+  html += '</tbody></table></body></html>';
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
+// ============================================================
+// DELETE HANDLER
+// ============================================================
+async function deleteItem(type, id, name) {
+  if (!confirm(`确认删除「${name}」？\n此操作将直接删除，不可恢复。`)) return;
+  try {
+    switch(type) {
+      case 'member': await MembersAPI.delete(id); break;
+      case 'cadre': await CadreAPI.delete(id); break;
+      case 'activity': await ActivityAPI.delete(id); break;
+      case 'material': await MaterialAPI.delete(id); break;
+    }
+    showToast('已删除', 'success');
+    // Refresh current page
+    const pageId = document.querySelector('.sidebar-nav a.active')?.dataset?.page;
+    if (pageId) navigateTo(pageId);
+    updateTopbar();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(async function init() {
+  await checkApi();
+  restoreSession();
+})();
+</script>
+
+<div style="display:none;position:fixed;bottom:8px;right:8px;background:rgba(0,0,0,0.8);color:#fff;padding:8px 12px;border-radius:8px;font-size:11px;z-index:99;max-width:260px" id="testInfo">
+  <strong>测试账号</strong><br>
+  会长: admin / admin123<br>
+  行政副会: vice1 / vice1123<br>
+  组织副会: vice2 / vice2123<br>
+  学术副会: vice3 / vice3123<br>
+  普通部长: minister / minister123<br>
+  学术部长: academic / academic123<br>
+  <strong style="color:#f0c040">启动后端: cd backend && npm start</strong>
+  <button style="display:block;margin-top:4px;font-size:10px;padding:2px 8px;background:#fff;color:#333;border-radius:4px;border:none;cursor:pointer" onclick="this.parentElement.remove()">关闭</button>
+</div>
+</body>
+</html>
